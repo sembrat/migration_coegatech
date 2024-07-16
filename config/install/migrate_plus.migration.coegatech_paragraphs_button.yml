@@ -1,0 +1,38 @@
+# Unique ID.
+id: coegatech_paragraphs_button
+label: 'College of Engineering: Paragraph: Button'
+# Providing a group for all paragraphs to blocks.
+migration_group: paragraphs_to_block
+# Tagging this for the news content type.
+migration_tags:
+  - news
+dependencies: { }
+
+# Defining the Drupal 7 source paragraph item.
+source:
+  # Migrating from D7 paragraphs item
+  plugin: d7_paragraphs_item
+  bundle: button
+  key: migrate
+process:
+  type:
+    plugin: default_value
+    default_value: 'gtcoe_button'
+  # Author field
+  field_author: field_author
+  # Button link field
+  field_gtcoe_button_link:
+    # Parsing through link field components.
+    # format: {d8 field: d7 field}
+    plugin: sub_process
+    source: field_button_link
+    process:
+      uri: url
+      title: title
+# Destination (Drupal 8) inline-block
+destination:
+  plugin: entity:block_content
+  bundle: gtcoe_button
+migration_dependencies:
+  required: {  }
+  optional: {  }

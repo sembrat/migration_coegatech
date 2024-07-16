@@ -1,0 +1,144 @@
+langcode: en
+status: true
+dependencies: { }
+id: coegatech_news
+migration_tags:
+  - 'Drupal 7'
+  - Content
+  - 'Layout content'
+migration_group: content
+label: 'College of Engineering: Entity: News'
+source:
+  plugin: d7_node
+  node_type: coe_news
+  constants:
+    map:
+      # paragraph_item_id: block_migration_id
+      button: 'coegatech_paragraphs_button'
+      content_text_photos: 'coegatech_paragraphs_richtext'
+      image: 'coegatech_paragraphs_image'
+      video: 'coegatech_paragraphs_video'
+      quote: 'coegatech_paragraphs_quote'
+      call_to_action: 'coegatech_paragraphs_card'
+process:
+  # Bring over creation/editing dates
+  created: created
+  changed: created
+  path/alias: alias
+  path/pathauto:
+    plugin: default_value
+    default_value: false
+
+  field_news_byline: field_news_by_line
+
+  # External URL News fields
+  'field_news_ext_url/uri': field_news_external_link/url
+  'field_news_ext_url/title': field_news_external_link_source/value
+
+  # Long Text in : long text out
+  field_news_subhead/value:
+    plugin: extract
+    source: field_news_subheading
+    index:
+      - 0
+      - value
+    default: ''
+  # Formatting should always be basic_html
+  field_news_subhead/format:
+    plugin: default_value
+    default_value: 'basic_html'
+
+  # Social (for archived pages, use legacy body tag)
+  field_news_social_teaser/value:
+    plugin: extract
+    source: field_news_subheading
+    index:
+      - 0
+      - value
+    default: 'The Georgia Institute of Technology is a leading research university committed to improving the human condition through advanced science and technology.'
+  # Formatting should always be basic_html
+  field_news_social_teaser/format:
+    plugin: default_value
+    default_value: 'basic_html'
+
+  # Header image
+  field_news_header_image:
+    plugin: sub_process
+    source: field_news_header_image
+    process:
+      target_id:
+        # is it a migration, or migration_lookup?
+        plugin: migration_lookup
+        source: fid
+        migration: coegatech_headerfiles_csv
+      # Now, bring over additional data like alt text.
+      alt: alt
+
+  # "Social" image
+    # Historical location: news/featured
+  field_news_social_image:
+    plugin: sub_process
+    source: field_news_featured_image
+    process:
+      target_id:
+        # is it a migration, or migration_lookup?
+        plugin: migration_lookup
+        source: fid
+        migration: coegatech_socialfiles_csv
+      # Now, bring over additional data like alt text.
+      alt: alt
+
+  # Export tags by iterating via subprocess and referencing via targetid
+  field_news_tags:
+    plugin: sub_process
+    source: field_news_tags
+    process:
+      target_id:
+        plugin: migration_lookup
+        migration:
+          - coegatech_news_tags
+        source: target_id
+
+  # Importing the default layout.
+  default_temp:
+    plugin: default_layout
+    bundle: coe_news
+  # Migrating the legacy body field
+  body_temp:
+    plugin: bodyfield_layout
+    source_field: body
+  # Migrating blocks
+  paragraphs_temp:
+    plugin: paragraphs_layout
+    source_field: field_gt_container
+  # Migratiing legacy images
+  newsimages_temp:
+    plugin: newsimage_layout
+    source_field: field_news_content_images
+  # Converting legacy body field into a block/section
+  layout_builder__layout:
+    plugin: get
+    source:
+      - '@default_temp'
+      - '@body_temp'
+      - '@paragraphs_temp'
+      - '@newsimages_temp'
+destination:
+  bundle: coe_news
+migration_dependencies:
+  required:
+    - coegatech_paragraphs_button
+    - coegatech_paragraphs_richtext
+    - coegatech_paragraphs_image
+    - coegatech_paragraphs_video
+    - coegatech_paragraphs_quote
+    - coegatech_paragraphs_card
+    - coegatech_news_tags
+
+  optional:
+    - coegatech_files_csv
+    - coegatech_headerfiles_csv
+    - coegatech_legacyfiles_csv
+    - coegatech_ctafiles_csv
+    - coegatech_socialfiles_csv
+# Make these required once files export has parity with DB export

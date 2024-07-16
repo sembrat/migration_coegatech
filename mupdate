@@ -1,0 +1,135 @@
+#!/bin/bash
+
+# arguments
+arg_verbosity=false
+arg_import=false
+arg_rollback=false
+arg_update=false
+
+# colours
+# -----------------------
+# Color Variable cheat-sheet
+bash_color_green="\x1B[42m"
+bash_color_no="\x1B[0m"
+bash_color_red="\x1B[41m"
+bash_color_yellow="\x1B[43m"
+bash_color_pink="\x1B[105m"
+bash_color_blue='\x1B[44m'
+bash_color_blue_lite='\x1B[104m'
+bash_color_gray='\x1B[100m'
+
+# Starting variables
+# -----------------------
+TICKTOCK=0
+
+# tick()
+# -----------------------
+function tick() {
+  TICKTOCK=$(expr $TICKTOCK + 1)
+	echo ""
+  	echo "-------------------------------------------"
+	echo -e "$TICKTOCK. $BCYELL[$1]$BCNO"
+	echo "-------------------------------------------"
+}
+
+# step()
+# Your generic stepping, with colors.
+# --------------------------
+function step () {
+	local_color=$bash_color_no
+
+	# Case for message attributes.
+	case $1 in
+		"INFO")
+			local_color=$bash_color_blue
+			;;
+		"WARN")
+			local_color=$bash_color_yellow
+			;;
+		"ASK")
+			local_color=$bash_color_magenta
+			;;
+		"IMPORTANT")
+			local_color=$bash_color_blue_lite
+			;;
+		"SUCCESS")
+			local_color=$bash_color_green
+			;;
+		"OK")
+			local_color=$bash_color_green
+			;;
+		"SKIP")
+			local_color=$bash_color_gray
+			;;
+		"DEBUG")
+			local_color=$bash_color_pink
+			;;
+		*)
+			local_color=$bash_color_no
+	esac
+
+	if [ "$arg_verbosity" == "true" ] && [ ! -z "$3" ]; then
+		# Presence of $3 and verbosity = verboseeeee
+		echo -e "$bash_color_pink[$3]$bash_color_no $local_color[$1]$bash_color_no $2"
+	else
+		if [ -z "$3" ]; then
+			# Lack of $3 means a regular message
+			echo -e "$local_color[$1]$bash_color_no $2"
+		fi
+	fi
+}
+
+# Checking options on command.
+while getopts iruv option
+do
+	case "${option}"
+	in
+	i) arg_import=true;;
+	r) arg_rollback=true;;
+	u) arg_update=true;;
+	v) arg_verbosity=true;;
+	esac
+done
+
+
+all_migration="$2"
+
+for var in "$@"
+do
+	if [ $var == $1 ]; then
+		tick "Imported arguments $var  ᕙ༼ ͝°益° ༽ᕗ "
+	else
+		migration="$var"
+
+		tick "Managing migration $migration  ᕙ༼ ͝°益° ༽ᕗ "
+
+		if [ -z $migration ]; then
+			step "ERROR" "No argument found, exiting."
+			exit 0
+		fi
+
+		tick "Resetting migration $migration  ᕙ༼ ͝°益° ༽ᕗ "
+
+		lando drush migrate:stop $migration
+		lando drush migrate:reset-status $migration
+
+		if [ $arg_rollback == true ]; then
+		tick "Rollback $migration  ᕙ༼ ͝°益° ༽ᕗ "
+			lando drush migrate:rollback $migration
+			step "OK" "Completed rollback of migration $migration  ᕙ༼ ͝°益° ༽ᕗ "
+		fi
+
+		if [ $arg_update == true ]; then
+		tick "Refreshing YAML for $migration  ᕙ༼ ͝°益° ༽ᕗ "
+			lando drush pmu migration_coegatech && lando drush en migration_coegatech
+			step "OK" "Completed reset of migration YAML for $migration  ᕙ༼ ͝°益° ༽ᕗ "
+
+		fi
+
+		if [ $arg_import == true ]; then
+			tick "Importing $migration  ᕙ༼ ͝°益° ༽ᕗ "
+			lando drush migrate:import $migration
+			step "OK" "Completed import of migration $migration  ᕙ༼ ͝°益° ༽ᕗ "
+		fi
+	fi
+done

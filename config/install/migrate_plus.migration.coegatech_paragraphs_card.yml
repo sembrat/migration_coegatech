@@ -1,0 +1,54 @@
+id: coegatech_paragraphs_card
+label: 'College of Engineering: Paragraph: Card'
+migration_group: paragraphs_to_block
+
+dependencies: { }
+
+source:
+  plugin: d7_paragraphs_item
+  bundle: call_to_action
+  key: migrate
+process:
+  type:
+    plugin: default_value
+    default_value: 'gtcoe_card'
+  # Use coegatech_files to lookup migrated file, and migrate it over.
+  field_gtcoe_card_image:
+    plugin: sub_process
+    source: field_cta_image
+    process:
+      target_id:
+        # is it a migration, or migration_lookup?
+        plugin: migration_lookup
+        source: fid
+        migration: coegatech_ctafiles_csv
+      # Now, bring over additional data like alt text.
+      alt: alt
+  field_gtcoe_card_heading: field_cta_title
+  body/value:
+    plugin: extract
+    source: field_cta_teaser_text
+    index:
+      - 0
+      - value
+    default: ''
+  body/format:
+    plugin: default_value
+    default_value: 'basic_html'
+  field_gtcoe_card_link:
+    # Parsing through link field components.
+    # format: {d8 field: d7 field}
+    plugin: sub_process
+    source: field_cta_link
+    process:
+      uri: url
+      title: title
+
+# Drupal 8 block.
+destination:
+  plugin: entity:block_content
+  bundle: gtcoe_card
+
+migration_dependencies:
+  required: {  }
+  optional: {  }

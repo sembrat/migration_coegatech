@@ -1,0 +1,43 @@
+# Migration for category taxonomy
+id: coegatech_news_tags
+label: 'College of Engineering: News: Tags'
+migration_group: taxonomy
+deriver: Drupal\taxonomy\Plugin\migrate\D7TaxonomyTermDeriver
+
+source:
+  plugin: d7_taxonomy_term
+  bundle: news_tags
+
+destination:
+  plugin: entity:taxonomy_term
+
+process:
+  tid: tid
+  vid:
+    plugin: default_value
+    default_value: coenews_tags
+
+  name: name
+  weight: weight
+
+  'description/value': description
+  'description/format': format
+  changed: timestamp
+
+    # Only attempt to stub real (non-zero) parents.
+  parent_id:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: parent
+    -
+      plugin: migration_lookup
+      migration: coegatech_news_tags
+
+  parent:
+    plugin: default_value
+    default_value: 0
+    source: '@parent_id'
+
+
+migration_dependencies: { }

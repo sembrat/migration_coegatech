@@ -1,0 +1,32 @@
+id: coegatech_paragraphs_video
+label: 'College of Engineering: Paragraph: Video'
+migration_group: paragraphs_to_block
+
+dependencies: { }
+
+source:
+  plugin: d7_paragraphs_item
+  bundle: video
+  key: migrate
+process:
+  type:
+    plugin: default_value
+    default_value: 'coe_youtube_embed'
+  field_author: field_author
+  # This video value probably needs a plugin to map values, @todo
+  field_coe_youtube:
+    plugin: extract
+    source: field_video_video
+    index:
+      - 0
+      - video_url
+    default: ''
+
+# Drupal 8 block.
+destination:
+  plugin: entity:block_content
+  bundle: coe_youtube_embed
+
+migration_dependencies:
+  required: {  }
+  optional: {  }

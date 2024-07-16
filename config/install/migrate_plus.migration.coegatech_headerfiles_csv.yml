@@ -1,0 +1,95 @@
+id: coegatech_headerfiles_csv
+label: 'College of Engineering: File Migrations: Header Images: CSV'
+migration_group: csv
+
+dependencies: { }
+
+source:
+  constants:
+    # d7 file location
+    source_base_path: '/app/drupal/web/sites/default/legacyfiles'
+    dest_path: 'public://news/head'
+  plugin: 'csv'
+  # Full path to the file.
+  # path: https://coe.gatech.edu/admin/export/d7/news/images/head
+  # view: https://coe.gatech.edu/admin/structure/views/view/data_export_d7_images_news_header/edit
+  path: '/app/drupal/web/modules/custom/migration_coegatech/export/coegatech_headerfiles_csv.csv'
+  # Column delimiter. Comma (,) by default.
+  delimiter: ','
+  # Field enclosure. Double quotation marks (") by default.
+  enclosure: '"'
+  # The row to be used as the CSV header (indexed from 0),
+  # or null if there is no header row.
+  # header_offset: 0
+  header_row_count: 1
+  track_changes: true
+  # The column(s) to use as a key. Each column specified will
+  # create an index in the migration table and too many columns
+  # may throw an index size error.
+  ids:
+    - csv_fid
+
+process:
+  filename: csv_filename
+  # First, fix path to remove "public://"
+  source_path_fix:
+    -
+      plugin: str_replace
+      source: csv_path
+      search: "public://"
+      replace: ""
+  # Craft up destination path: [block/img/20##/##]
+  dest_full_path:
+    -
+      plugin: concat
+      delimiter: /
+      source:
+        - constants/dest_path
+        - csv_date_y
+        - csv_date_m
+        - csv_filename
+    -
+      plugin: urlencode
+  # Now, concat with the source_base_path of file locations.
+  source_full_path:
+    -
+      plugin: concat
+      delimiter: /
+      source:
+        - constants/source_base_path
+        - '@source_path_fix'
+    -
+      plugin: urlencode
+  # Now, copy the file to D8 file location.
+  uri:
+    -
+      plugin: file_copy
+      source:
+        - '@source_full_path'
+        - '@dest_full_path'
+
+  # And write data.
+  filemime: csv_mime
+  status:
+    - plugin: default_value
+      default_value: 1
+  created: csv_date
+  changed: csv_date
+
+  uid:
+    - plugin: entity_lookup
+      entity_type: user
+      value_key: name
+      source: "automaton"
+      bundle_key: status
+      bundle: 1
+      ignore_case: true
+    - plugin: default_value
+      default_value: 1
+
+destination:
+  plugin: entity:file
+
+migration_dependencies:
+  required: {  }
+  optional: {  }

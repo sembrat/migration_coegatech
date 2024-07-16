@@ -1,0 +1,36 @@
+id: coegatech_paragraphs_quote
+label: 'College of Engineering: Paragraph: Quote'
+migration_group: paragraphs_to_block
+
+dependencies: { }
+
+# TO DO - ACTUALLY MIGRATE THIS INTO A BETTER QUOTE CUSTOM BLOCK TYPE
+source:
+  plugin: d7_paragraphs_item
+  bundle: quote
+  key: migrate
+process:
+  type:
+    plugin: default_value
+    default_value: 'gtcoe_quote'
+  field_author: field_author
+  # Concerned really with body value, not the summary/anything else.
+  body/value:
+    plugin: extract
+    source: field_quote_text
+    index:
+      - 0
+      - value
+    default: ''
+  body/format:
+    plugin: default_value
+    default_value: 'basic_html'
+
+# Drupal 8 block.
+destination:
+  plugin: entity:block_content
+  bundle: gtcoe_quote
+
+migration_dependencies:
+  required: {  }
+  optional: {  }

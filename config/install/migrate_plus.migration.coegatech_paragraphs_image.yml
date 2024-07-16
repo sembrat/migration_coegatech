@@ -1,0 +1,52 @@
+id: coegatech_paragraphs_image
+label: 'College of Engineering: Paragraph: Image'
+migration_group: paragraphs_to_block
+
+dependencies: { }
+
+source:
+  plugin: d7_paragraphs_item
+  bundle: image
+  key: migrate
+process:
+  type:
+    plugin: default_value
+    # Default to D8 bundle.
+    default_value: 'image'
+  field_author: field_author
+
+  # Associated caption
+  body/value:
+    plugin: extract
+    source: field_gt_photo_caption
+    index:
+      - 0
+      - value
+    default: ''
+  # Formatting should always be basic_html
+  body/format:
+    plugin: default_value
+    default_value: 'basic_html'
+
+  # Use coegatech_files to lookup migrated file, and migrate it over.
+  field_image:
+    plugin: sub_process
+    source: field_gt_photo_upload_s_
+    process:
+      target_id:
+        # is it a migration, or migration_lookup?
+        plugin: migration_lookup
+        source: fid
+        migration: coegatech_files_csv
+      # Now, bring over additional data like alt text.
+      alt: alt
+
+# Drupal 8 block.
+destination:
+  plugin: entity:block_content
+  # Import into image block type.
+  bundle: image
+
+migration_dependencies:
+  required: {  }
+  optional: {  }

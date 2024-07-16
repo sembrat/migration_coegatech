@@ -1,0 +1,21 @@
+<?php
+
+use Drupal\Core\Config\FileStorage;
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Removes stale migration configs during uninstall.
+ */
+function migration_coegatech_uninstall() {
+	\Drupal::logger('uninstall')->notice('Removing migration_coegatech config.');
+	$dir = new DirectoryIterator(dirname(__FILE__) . '/config/install');
+	foreach ($dir as $fileinfo) {
+		if (!$fileinfo->isDot()) {
+				//$filename = $fileinfo->getFilename();
+				$filename = $fileinfo->getBasename('.yml');
+				\Drupal::configFactory()->getEditable($filename)->delete();
+				\Drupal::logger('uninstall')->notice('Removed ' . $filename . ' config.');
+    }
+	}
+}

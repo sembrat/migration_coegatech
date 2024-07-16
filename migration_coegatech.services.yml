@@ -1,0 +1,10 @@
+services:
+  migration_coegatech.subscriber.pre_row_save:
+    class: Drupal\migration_coegatech\EventSubscriber\PreRowSaveSubscriber
+    arguments: []
+    tags:
+      - {name: event_subscriber}
+  migration_coegatech.post_migration_subscriber:
+    class: '\Drupal\migration_coegatech\EventSubscriber\PostMigrationSubscriber'
+    tags:
+      - { name: 'event_subscriber' }
